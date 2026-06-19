@@ -1,0 +1,144 @@
+.participants-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.participants-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.participants-page__header h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.participants-page__header p {
+  margin-top: 4px;
+  color: #7b8794;
+}
+
+.participants-page__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.participants-page__primary,
+.participants-page__secondary {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.participants-page__primary {
+  border: none;
+  background: #10b981;
+  color: #ffffff;
+}
+
+.participants-page__secondary {
+  border: 1px solid #dfe7ef;
+  background: #ffffff;
+  color: #435162;
+}
+
+.participants-page__card {
+  padding: 18px;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.participants-page__filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.participants-page__filters input,
+.participants-page__filters select {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #dfe7ef;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.participants-page__filters input {
+  width: 300px;
+}
+
+.participants-page__filters select {
+  width: 180px;
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.participants-table th {
+  padding: 14px 10px;
+  text-align: left;
+  color: #7b8794;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.participants-table td {
+  padding: 16px 10px;
+  border-top: 1px solid #eef2f6;
+  color: #435162;
+  font-size: 14px;
+}
+
+.participants-table strong {
+  color: #1f2937;
+}
+
+.participants-status {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.participants-status--visited {
+  background: #dffaf1;
+  color: #0f9f76;
+}
+
+.participants-page__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 6px 0;
+  color: #7b8794;
+  font-size: 14px;
+}
+
+.participants-page__pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.participants-page__pagination button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #7b8794;
+  font-weight: 700;
+}
+
+.participants-page__pagination-active {
+  background: #2f628f !important;
+  color: #ffffff !important;
+}
