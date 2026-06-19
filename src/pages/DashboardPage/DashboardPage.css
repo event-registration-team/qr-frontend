@@ -1,0 +1,45 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+
+  gap: 24px;
+}
+
+.dashboard-page__header {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.dashboard-page__title {
+  font-size: 28px;
+
+  color: #111827;
+}
+
+.dashboard-page__description {
+  font-size: 16px;
+
+  color: #6b7280;
+}
+
+.dashboard-page__grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
