@@ -2,19 +2,21 @@ import './StatsCard.css';
 
 interface StatsCardProps {
   title: string;
-  value: number;
-  description?: string;
+  value: string;
+  accent: string;
+  icon: string;
 }
 
-export function StatsCard({ title, value, description }: StatsCardProps) {
+export function StatsCard({ title, value, accent, icon }: StatsCardProps) {
   return (
     <article className="stats-card">
-      <p className="stats-card__title">{title}</p>
+      <div className="stats-card__icon">{icon}</div>
+
       <strong className="stats-card__value">{value}</strong>
 
-      {description && (
-        <p className="stats-card__description">{description}</p>
-      )}
+      <p className="stats-card__accent">{accent}</p>
+
+      <p className="stats-card__title">{title}</p>
     </article>
   );
 }
