@@ -1,0 +1,19 @@
+.sidebar {
+
+  width: 260px;
+
+  background: #ffffff;
+
+  border-right: 1px solid #e5e7eb;
+
+}
+
+.sidebar__logo {
+
+  padding: 32px;
+
+  font-size: 24px;
+
+  font-weight: 700;
+
+}

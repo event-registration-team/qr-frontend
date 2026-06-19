@@ -1,0 +1,47 @@
+.header {
+
+  height: 80px;
+
+  padding: 0 32px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e5e7eb;
+
+}
+
+.header__subtitle {
+
+  font-size: 14px;
+
+  color: #6b7280;
+
+}
+
+.header__title {
+
+  font-size: 22px;
+
+  color: #111827;
+
+}
+
+.header__logout {
+
+  padding: 10px 18px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #2563eb;
+
+  color: #ffffff;
+
+}
