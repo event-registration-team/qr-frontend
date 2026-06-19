@@ -5,7 +5,9 @@ interface EventFormPageProps {
 export function EventFormPage({ mode }: EventFormPageProps) {
   return (
     <div>
-      {mode === 'create' ? 'Создание мероприятия' : 'Редактирование мероприятия'}
+      {mode === 'create'
+        ? 'Создание мероприятия'
+        : 'Редактирование мероприятия'}
     </div>
   );
 }
