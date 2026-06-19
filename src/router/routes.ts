@@ -4,7 +4,7 @@ export const ROUTES = {
   events: '/events',
   createEvent: '/events/create',
   editEvent: '/events/:id/edit',
-  participants: '/events/:id/participants',
-  statistics: '/events/:id/statistics',
-  importExport: '/events/:id/import-export',
+  participants: '/participants',
+  statistics: '/statistics',
+  importExport: '/import-export',
 } as const;
