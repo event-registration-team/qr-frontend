@@ -9,6 +9,10 @@ import { ImportExportPage } from '../pages/ImportExportPage/ImportExportPage';
 import { LoginPage } from '../pages/LoginPage/LoginPage';
 import { ParticipantsPage } from '../pages/ParticipantsPage/ParticipantsPage';
 import { StatisticsPage } from '../pages/StatisticsPage/StatisticsPage';
+import { RegisterPage } from '../pages/RegisterPage/RegisterPage';
+import { RegistrationClosedPage } from '../pages/RegistrationClosedPage/RegistrationClosedPage';
+import { RegistrationSuccessPage } from '../pages/RegistrationSuccessPage/RegistrationSuccessPage';
+import { PublicLayout } from '../components/PublicLayout/PublicLayout';
 
 import { ROUTES } from './routes';
 
@@ -20,6 +24,23 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.login,
     element: <LoginPage />,
+  },
+  {
+    element: <PublicLayout />,
+    children: [
+      {
+        path: ROUTES.register,
+        element: <RegisterPage />,
+      },
+      {
+        path: ROUTES.registerClosed,
+        element: <RegistrationClosedPage />,
+      },
+      {
+        path: ROUTES.registerSuccess,
+        element: <RegistrationSuccessPage />,
+      },
+    ],
   },
   {
     element: <AdminLayout />,

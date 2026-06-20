@@ -7,4 +7,7 @@ export const ROUTES = {
   participants: '/participants',
   statistics: '/statistics',
   importExport: '/import-export',
+  register: '/register/:eventToken',
+  registerClosed: '/register/:eventToken/closed',
+  registerSuccess: '/register/:eventToken/success',
 } as const;
