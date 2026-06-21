@@ -3,17 +3,17 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { getPublicEvent, registerParticipant } from '../../api/publicApi';
+import { getEvent, registerParticipant } from '../../api/publicApi';
 import { makeRegistrationSchema, type RegistrationFormValues } from '../../lib/validation';
-import type { ApiError, PublicEvent } from '../../types/api';
+import type { NormalizedApiError, PublicEvent } from '../../types/api';
 import { ROUTES } from '../../router/routes';
 import { Button } from '../../components/ui/Button/Button';
 import { TextField } from '../../components/ui/TextField/TextField';
 import { Card } from '../../components/ui/Card/Card';
 import './RegisterPage.css';
 
-function isApiError(err: unknown): err is ApiError {
-  return typeof err === 'object' && err !== null && 'code' in err;
+function isNormalizedError(err: unknown): err is NormalizedApiError {
+  return typeof err === 'object' && err !== null && 'kind' in err;
 }
 
 function formatDate(dateString: string): string {
@@ -29,35 +29,40 @@ function formatDate(dateString: string): string {
 export function RegisterPage() {
   const { eventToken } = useParams<{ eventToken: string }>();
   const navigate = useNavigate();
+  const eventId = Number(eventToken);
 
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [emailTakenError, setEmailTakenError] = useState(false);
-  const [generalError, setGeneralError] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [formAlert, setFormAlert] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!eventToken) return;
+    if (!eventToken || isNaN(eventId)) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    getPublicEvent(eventToken)
+    getEvent(eventId)
       .then(setEvent)
       .catch((err) => {
-        if (isApiError(err) && err.code === 'EVENT_NOT_FOUND') {
+        if (isNormalizedError(err) && err.kind === 'event_not_found') {
           setNotFound(true);
         } else {
-          setGeneralError(true);
+          setLoadError(true);
         }
       })
       .finally(() => setLoading(false));
-  }, [eventToken]);
+  }, [eventToken, eventId]);
 
   const schema = event
     ? makeRegistrationSchema({
-        requirePhone: event.requirePhone,
-        requireCarNumber: event.requireCarNumber,
+        require_phone: event.require_phone,
+        require_car_number: event.require_car_number,
       })
-    : makeRegistrationSchema({ requirePhone: false, requireCarNumber: false });
+    : makeRegistrationSchema({ require_phone: false, require_car_number: false });
 
   const {
     register,
@@ -66,47 +71,67 @@ export function RegisterPage() {
   } = useForm<RegistrationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      lastName: '',
-      firstName: '',
-      middleName: '',
+      last_name: '',
+      first_name: '',
+      middle_name: '',
       email: '',
       phone: '',
-      carNumber: '',
+      car_number: '',
     },
   });
 
   const onSubmit = async (values: RegistrationFormValues) => {
-    if (!eventToken || !event) return;
-    setEmailTakenError(false);
-    setGeneralError(false);
+    if (!event) return;
+    setFormAlert(null);
     setSubmitting(true);
     try {
-      const response = await registerParticipant(eventToken, {
-        lastName: values.lastName,
-        firstName: values.firstName,
-        middleName: values.middleName || undefined,
+      const response = await registerParticipant({
+        event_id: event.id,
+        last_name: values.last_name,
+        first_name: values.first_name,
+        middle_name: values.middle_name || undefined,
         email: values.email,
         phone: values.phone || undefined,
-        carNumber: values.carNumber || undefined,
+        car_number: values.car_number || undefined,
       });
-      navigate(ROUTES.registerSuccess.replace(':eventToken', eventToken), {
-        state: response,
+      navigate(ROUTES.registerSuccess.replace(':eventToken', eventToken!), {
+        state: {
+          message: response.message,
+          qr_token: response.qr_token,
+          participant: response.participant,
+          event: {
+            title: event.title,
+            location: event.location,
+            start_at: event.start_at,
+          },
+        },
         replace: true,
       });
     } catch (err) {
-      if (isApiError(err)) {
-        if (err.code === 'EMAIL_ALREADY_REGISTERED') {
-          setEmailTakenError(true);
-        } else if (err.code === 'EVENT_FULL' || err.code === 'REGISTRATION_CLOSED') {
-          navigate(ROUTES.registerClosed.replace(':eventToken', eventToken), {
-            state: { reason: err.code === 'EVENT_FULL' ? 'full' : 'closed' },
-            replace: true,
-          });
-        } else {
-          setGeneralError(true);
+      if (isNormalizedError(err)) {
+        switch (err.kind) {
+          case 'email_already_registered':
+            setFormAlert(
+              'На данный адрес электронной почты уже оформлена регистрация на данное мероприятие',
+            );
+            break;
+          case 'registration_closed_or_full':
+            navigate(ROUTES.registerClosed.replace(':eventToken', eventToken!), {
+              state: { reason: 'closed' },
+              replace: true,
+            });
+            break;
+          case 'validation_error':
+            setFormAlert('Проверьте корректность введённых данных');
+            break;
+          case 'event_not_found':
+            setNotFound(true);
+            break;
+          default:
+            setFormAlert('Что-то пошло не так, попробуйте позже');
         }
       } else {
-        setGeneralError(true);
+        setFormAlert('Что-то пошло не так, попробуйте позже');
       }
     } finally {
       setSubmitting(false);
@@ -129,7 +154,7 @@ export function RegisterPage() {
     );
   }
 
-  if (generalError && !event) {
+  if (loadError) {
     return (
       <Card>
         <p className="register-page__status">Что-то пошло не так, попробуйте позже</p>
@@ -137,14 +162,21 @@ export function RegisterPage() {
     );
   }
 
-  if (
-    event &&
-    (event.registrationStatus === 'closed' || event.isFull)
-  ) {
+  if (event && event.registration_status === 'closed') {
     return (
       <Navigate
         to={ROUTES.registerClosed.replace(':eventToken', eventToken!)}
-        state={{ reason: event.isFull ? 'full' : 'closed' }}
+        state={{ reason: 'closed' }}
+        replace
+      />
+    );
+  }
+
+  if (event && event.current_participants_count >= event.max_participants) {
+    return (
+      <Navigate
+        to={ROUTES.registerClosed.replace(':eventToken', eventToken!)}
+        state={{ reason: 'full' }}
         replace
       />
     );
@@ -155,18 +187,13 @@ export function RegisterPage() {
       <h1 className="register-page__title">Регистрация на мероприятие</h1>
       {event && (
         <p className="register-page__subtitle">
-          {formatDate(event.startAt)} · {event.location}
+          {formatDate(event.start_at)} · {event.location}
         </p>
       )}
 
-      {emailTakenError && (
+      {formAlert && (
         <div className="register-page__alert" role="alert">
-          На данный адрес электронной почты уже оформлена регистрация на данное мероприятие
-        </div>
-      )}
-      {generalError && (
-        <div className="register-page__alert" role="alert">
-          Что-то пошло не так, попробуйте позже
+          {formAlert}
         </div>
       )}
 
@@ -175,21 +202,21 @@ export function RegisterPage() {
           label="Фамилия"
           required
           placeholder="Иванов"
-          error={errors.lastName?.message}
-          {...register('lastName')}
+          error={errors.last_name?.message}
+          {...register('last_name')}
         />
         <TextField
           label="Имя"
           required
           placeholder="Иван"
-          error={errors.firstName?.message}
-          {...register('firstName')}
+          error={errors.first_name?.message}
+          {...register('first_name')}
         />
         <TextField
           label="Отчество"
           placeholder="Иванович"
-          error={errors.middleName?.message}
-          {...register('middleName')}
+          error={errors.middle_name?.message}
+          {...register('middle_name')}
         />
         <TextField
           label="Email"
@@ -199,7 +226,7 @@ export function RegisterPage() {
           error={errors.email?.message}
           {...register('email')}
         />
-        {event?.requirePhone && (
+        {event?.require_phone && (
           <TextField
             label="Телефон"
             required
@@ -209,13 +236,13 @@ export function RegisterPage() {
             {...register('phone')}
           />
         )}
-        {event?.requireCarNumber && (
+        {event?.require_car_number && (
           <TextField
             label="Номер автомобиля"
             required
             placeholder="А000АА77"
-            error={errors.carNumber?.message}
-            {...register('carNumber')}
+            error={errors.car_number?.message}
+            {...register('car_number')}
           />
         )}
 
