@@ -142,3 +142,13 @@
   background: #2f628f !important;
   color: #ffffff !important;
 }
+
+.participants-page__state {
+  padding: 24px 8px;
+  color: #7b8794;
+  font-weight: 600;
+}
+
+.participants-page__state--error {
+  color: #ef4444;
+}

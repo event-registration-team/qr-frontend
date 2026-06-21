@@ -15,6 +15,7 @@ import { RegistrationSuccessPage } from '../pages/RegistrationSuccessPage/Regist
 import { PublicLayout } from '../components/PublicLayout/PublicLayout';
 
 import { ROUTES } from './routes';
+import { ScanPage } from '../pages/ScanPage/ScanPage';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,13 @@ export const router = createBrowserRouter([
     path: ROUTES.login,
     element: <LoginPage />,
   },
+
+  // 👇 ADD THIS OUTSIDE
+  {
+    path: '/scan',
+    element: <ScanPage />,
+  },
+
   {
     element: <PublicLayout />,
     children: [
