@@ -4,7 +4,6 @@ import * as XLSX from 'xlsx';
 import { eventService, type ApiEvent } from '../../services/eventService';
 import {
   participantService,
-  type ApiParticipant,
   type CreateParticipant,
 } from '../../services/participantService';
 
@@ -67,10 +66,7 @@ export default function ImportExportPage() {
       });
   }, []);
 
-  const selectedImportEvent = useMemo(
-    () => events.find((event) => event.id === importEventId),
-    [events, importEventId],
-  );
+  
 
   const selectedExportEvent = useMemo(
     () => events.find((event) => event.id === exportEventId),
