@@ -1,47 +1,67 @@
 import { api } from './api';
 
-export interface ApiParticipant {
+export type ApiParticipant = {
   id: number;
-  event_id: number;
-  last_name: string;
   first_name: string;
+  last_name: string;
   middle_name?: string | null;
   email: string;
   phone?: string | null;
   car_number?: string | null;
-  qr_token: string;
-  visit_status: 'registered' | 'visited';
-  registered_at: string;
+  visit_status: 'visited' | 'registered';
+  registered_at?: string | null;
   checked_in_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+};
 
-export interface CreateParticipantPayload {
+export type CreateParticipant = {
   event_id: number;
-  last_name: string;
   first_name: string;
+  last_name: string;
   middle_name?: string | null;
   email: string;
   phone?: string | null;
   car_number?: string | null;
+};
+
+function normalizeParticipants(response: any): ApiParticipant[] {
+  const data =
+    response?.participants ??
+    response?.data?.participants ??
+    response?.data ??
+    response;
+
+  return Array.isArray(data) ? data : [];
 }
 
 export const participantService = {
-  async getParticipantsByEventId(eventId: number) {
-    const response = await api.get<ApiParticipant[] | null>(
-      `/participants/event?event_id=${eventId}`,
-    );
-
-    return response.data ?? [];
+  async getParticipantsByEventId(eventId: number): Promise<ApiParticipant[]> {
+    const response = await api.get(`/participants/event?event_id=${eventId}`);
+    return normalizeParticipants(response.data);
   },
 
-  async registerParticipant(payload: CreateParticipantPayload) {
-    const response = await api.post<{
-      message: string;
-      qr_token: string;
-      participant: ApiParticipant;
-    }>('/participants/register', payload);
+  async registerParticipant(
+    payload: CreateParticipant,
+  ): Promise<{ participant: ApiParticipant }> {
+    const response = await api.post<{ participant: ApiParticipant }>(
+      '/participants/register',
+      payload,
+    );
+
+    return response.data;
+  },
+
+  async deleteParticipant(id: number): Promise<void> {
+    await api.delete(`/participants/${id}`);
+  },
+
+  async updateParticipant(
+    id: number,
+    data: Partial<ApiParticipant>,
+  ): Promise<{ participant: ApiParticipant }> {
+    const response = await api.patch<{ participant: ApiParticipant }>(
+      `/participants/${id}`,
+      data,
+    );
 
     return response.data;
   },

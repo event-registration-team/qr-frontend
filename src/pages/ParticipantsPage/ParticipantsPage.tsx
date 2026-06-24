@@ -1,14 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { eventService, type ApiEvent } from '../../services/eventService';
-import {
-  participantService,
-  type ApiParticipant,
-} from '../../services/participantService';
+import { eventService } from '../../services/eventService';
+import { participantService } from '../../services/participantService';
 
 import './ParticipantsPage.css';
 
-function getFullName(participant: ApiParticipant) {
+type Participant = {
+  id: number;
+  last_name: string;
+  first_name: string;
+  middle_name?: string | null;
+  email: string;
+  phone?: string | null;
+  car_number?: string | null;
+  visit_status?: 'registered' | 'visited';
+  registered_at?: string | null;
+};
+
+type EventItem = {
+  id: number;
+  title: string;
+};
+
+function getFullName(participant: Participant) {
   return [
     participant.last_name,
     participant.first_name,
@@ -30,14 +44,17 @@ function formatDate(value?: string | null) {
   });
 }
 
-export function ParticipantsPage() {
-  const [events, setEvents] = useState<ApiEvent[]>([]);
+export default function ParticipantsPage() {
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
-  const [participants, setParticipants] = useState<ApiParticipant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // modal state
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'registered' | 'visited'>('all');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -50,13 +67,18 @@ export function ParticipantsPage() {
   });
 
   useEffect(() => {
+    setError('');
+
     eventService
       .getEvents()
-      .then((loadedEvents) => {
-        setEvents(loadedEvents);
+      .then((response: any) => {
+        const list = response?.data ?? response;
+        const safeList = Array.isArray(list) ? list : [];
 
-        if (loadedEvents.length > 0) {
-          setSelectedEventId(loadedEvents[0].id);
+        setEvents(safeList);
+
+        if (safeList.length > 0) {
+          setSelectedEventId(safeList[0].id);
         }
       })
       .catch(() => {
@@ -65,18 +87,25 @@ export function ParticipantsPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedEventId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!selectedEventId) return;
 
     setIsLoading(true);
     setError('');
 
     participantService
       .getParticipantsByEventId(selectedEventId)
-      .then(setParticipants)
+      .then((response: any) => {
+        const list =
+          response?.participants ??
+          response?.data?.participants ??
+          response?.data ??
+          response;
+
+        setParticipants(Array.isArray(list) ? list : []);
+        setError('');
+      })
       .catch(() => {
+        setParticipants([]);
         setError('Не удалось загрузить участников');
       })
       .finally(() => {
@@ -84,22 +113,49 @@ export function ParticipantsPage() {
       });
   }, [selectedEventId]);
 
+  const filteredParticipants = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return participants.filter((participant) => {
+      const fullName = getFullName(participant).toLowerCase();
+      const email = participant.email.toLowerCase();
+
+      const matchesSearch =
+        !normalizedSearch ||
+        fullName.includes(normalizedSearch) ||
+        email.includes(normalizedSearch);
+
+      const matchesStatus =
+        statusFilter === 'all' || participant.visit_status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [participants, search, statusFilter]);
+
   async function handleAddParticipant() {
     if (!selectedEventId) return;
 
+    if (!form.last_name.trim() || !form.first_name.trim() || !form.email.trim()) {
+      setError('Заполните фамилию, имя и email');
+      return;
+    }
+
     try {
-      const result = await participantService.registerParticipant({
+      setError('');
+
+      const response = await participantService.registerParticipant({
         event_id: selectedEventId,
-        last_name: form.last_name,
-        first_name: form.first_name,
-        middle_name: form.middle_name || null,
-        email: form.email,
-        phone: form.phone || null,
-        car_number: form.car_number || null,
+        last_name: form.last_name.trim(),
+        first_name: form.first_name.trim(),
+        middle_name: form.middle_name.trim() || null,
+        email: form.email.trim(),
+        phone: form.phone.trim() || null,
+        car_number: form.car_number.trim() || null,
       });
 
-      setParticipants((prev) => [result.participant, ...prev]);
-      setIsModalOpen(false);
+      const newParticipant = response?.participant ?? response;
+
+      setParticipants((current) => [newParticipant, ...current]);
 
       setForm({
         last_name: '',
@@ -109,6 +165,8 @@ export function ParticipantsPage() {
         phone: '',
         car_number: '',
       });
+
+      setIsModalOpen(false);
     } catch {
       setError('Не удалось добавить участника');
     }
@@ -122,32 +180,27 @@ export function ParticipantsPage() {
           <p>Управление зарегистрированными участниками</p>
         </div>
 
-        <div className="participants-page__actions">
-          <button type="button" className="participants-page__secondary">
-            Импорт
-          </button>
-
-          <button type="button" className="participants-page__primary">
-            Экспорт
-          </button>
-
-          <button
-            type="button"
-            className="participants-page__primary"
-            onClick={() => setIsModalOpen(true)}
-          >
-            + Добавить участника
-          </button>
-        </div>
+        <button
+          type="button"
+          className="participants-page__primary"
+          onClick={() => setIsModalOpen(true)}
+        >
+          + Добавить участника
+        </button>
       </div>
 
       <div className="participants-page__card">
         <div className="participants-page__filters">
-          <input type="text" placeholder="Поиск по ФИО или Email..." />
+          <input
+            type="text"
+            placeholder="Поиск по ФИО или Email..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
 
           <select
             value={selectedEventId ?? ''}
-            onChange={(e) => setSelectedEventId(Number(e.target.value))}
+            onChange={(event) => setSelectedEventId(Number(event.target.value))}
           >
             {events.length === 0 && <option value="">Нет мероприятий</option>}
 
@@ -158,16 +211,17 @@ export function ParticipantsPage() {
             ))}
           </select>
 
-          <select defaultValue="all">
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as 'all' | 'registered' | 'visited')
+            }
+          >
             <option value="all">Все участники</option>
             <option value="visited">Посетившие</option>
             <option value="registered">Не посетившие</option>
           </select>
         </div>
-
-        {isLoading && (
-          <p className="participants-page__state">Загрузка участников...</p>
-        )}
 
         {error && (
           <p className="participants-page__state participants-page__state--error">
@@ -175,122 +229,172 @@ export function ParticipantsPage() {
           </p>
         )}
 
-        {!isLoading && !error && participants.length === 0 && (
+        {isLoading && (
+          <p className="participants-page__state">Загрузка участников...</p>
+        )}
+
+        {!isLoading && !error && filteredParticipants.length === 0 && (
           <p className="participants-page__state">Участников пока нет</p>
         )}
 
-        {!isLoading && !error && participants.length > 0 && (
+        {!isLoading && filteredParticipants.length > 0 && (
           <>
-            <table className="participants-table">
-              <thead>
-                <tr>
-                  <th>ФИО</th>
-                  <th>Email</th>
-                  <th>Телефон</th>
-                  <th>Авто</th>
-                  <th>Дата регистрации</th>
-                  <th>Статус</th>
-                  <th>Время прохода</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {participants.map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      <strong>{getFullName(p)}</strong>
-                    </td>
-                    <td>{p.email}</td>
-                    <td>{p.phone || 'Не указан'}</td>
-                    <td>{p.car_number || 'Не указан'}</td>
-                    <td>{formatDate(p.registered_at)}</td>
-                    <td>
-                      <span
-                        className={
-                          p.visit_status === 'visited'
-                            ? 'participants-status participants-status--visited'
-                            : 'participants-status'
-                        }
-                      >
-                        {p.visit_status === 'visited'
-                          ? 'Посетил'
-                          : 'Зарегистрирован'}
-                      </span>
-                    </td>
-                    <td>{formatDate(p.checked_in_at)}</td>
+            <div className="participants-page__table-wrap">
+              <table className="participants-table">
+                <thead>
+                  <tr>
+                    <th>ФИО</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Авто</th>
+                    <th>Дата регистрации</th>
+                    <th>Статус</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {filteredParticipants.map((participant) => (
+                    <tr key={participant.id}>
+                      <td>
+                        <strong>{getFullName(participant)}</strong>
+                      </td>
+                      <td>{participant.email}</td>
+                      <td>{participant.phone || 'Не указан'}</td>
+                      <td>{participant.car_number || 'Не указан'}</td>
+                      <td>{formatDate(participant.registered_at)}</td>
+                      <td>
+                        <span
+                          className={
+                            participant.visit_status === 'visited'
+                              ? 'participants-status participants-status--visited'
+                              : 'participants-status'
+                          }
+                        >
+                          {participant.visit_status === 'visited'
+                            ? 'Посетил'
+                            : 'Зарегистрирован'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             <div className="participants-page__footer">
-              <span>Показано {participants.length} участников</span>
+              <span>Показано {filteredParticipants.length} участников</span>
             </div>
           </>
         )}
       </div>
 
-      {/* MODAL */}
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal__content">
-            <h3>Добавить участника</h3>
+        <div
+          className="participants-modal"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="participants-modal__content"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="participants-modal__header">
+              <div>
+                <h2>Добавить участника</h2>
+                <p>Заполните данные регистрации</p>
+              </div>
 
-            <input
-              placeholder="Фамилия *"
-              value={form.last_name}
-              onChange={(e) =>
-                setForm({ ...form, last_name: e.target.value })
-              }
-            />
+              <button
+                type="button"
+                className="participants-modal__close"
+                onClick={() => setIsModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
 
-            <input
-              placeholder="Имя *"
-              value={form.first_name}
-              onChange={(e) =>
-                setForm({ ...form, first_name: e.target.value })
-              }
-            />
+            <div className="participants-modal__grid">
+              <label>
+                Фамилия *
+                <input
+                  type="text"
+                  value={form.last_name}
+                  onChange={(event) =>
+                    setForm({ ...form, last_name: event.target.value })
+                  }
+                />
+              </label>
 
-            <input
-              placeholder="Отчество"
-              value={form.middle_name}
-              onChange={(e) =>
-                setForm({ ...form, middle_name: e.target.value })
-              }
-            />
+              <label>
+                Имя *
+                <input
+                  type="text"
+                  value={form.first_name}
+                  onChange={(event) =>
+                    setForm({ ...form, first_name: event.target.value })
+                  }
+                />
+              </label>
 
-            <input
-              placeholder="Email *"
-              value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
-            />
+              <label>
+                Отчество
+                <input
+                  type="text"
+                  value={form.middle_name}
+                  onChange={(event) =>
+                    setForm({ ...form, middle_name: event.target.value })
+                  }
+                />
+              </label>
 
-            <input
-              placeholder="Телефон"
-              value={form.phone}
-              onChange={(e) =>
-                setForm({ ...form, phone: e.target.value })
-              }
-            />
+              <label>
+                Email *
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(event) =>
+                    setForm({ ...form, email: event.target.value })
+                  }
+                />
+              </label>
 
-            <input
-              placeholder="Авто"
-              value={form.car_number}
-              onChange={(e) =>
-                setForm({ ...form, car_number: e.target.value })
-              }
-            />
+              <label>
+                Телефон
+                <input
+                  type="text"
+                  value={form.phone}
+                  onChange={(event) =>
+                    setForm({ ...form, phone: event.target.value })
+                  }
+                />
+              </label>
 
-            <div className="modal__actions">
-              <button onClick={() => setIsModalOpen(false)}>
+              <label>
+                Авто
+                <input
+                  type="text"
+                  value={form.car_number}
+                  onChange={(event) =>
+                    setForm({ ...form, car_number: event.target.value })
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="participants-modal__actions">
+              <button
+                type="button"
+                className="participants-modal__cancel"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Отмена
               </button>
 
-              <button onClick={handleAddParticipant}>
-                Добавить
+              <button
+                type="button"
+                className="participants-modal__submit"
+                onClick={handleAddParticipant}
+              >
+                Сохранить
               </button>
             </div>
           </div>
