@@ -1,52 +1,62 @@
-export type EventRegistrationStatus = 'open' | 'closed' | 'completed';
+export type RegistrationStatus = 'open' | 'closed';
 
 export interface PublicEvent {
-  id: string;
+  id: number;
   title: string;
-  description?: string;
+  description: string | null;
   location: string;
-  startAt: string;
-  endAt?: string;
-  registrationStatus: EventRegistrationStatus;
-  isFull: boolean;
-  requirePhone: boolean;
-  requireCarNumber: boolean;
+  start_at: string;
+  end_at: string | null;
+  registration_status: RegistrationStatus;
+  max_participants: number;
+  current_participants_count: number;
+  require_phone: boolean;
+  require_car_number: boolean;
 }
 
 export interface RegisterRequest {
-  lastName: string;
-  firstName: string;
-  middleName?: string;
+  event_id: number;
+  last_name: string;
+  first_name: string;
+  middle_name?: string;
   email: string;
   phone?: string;
-  carNumber?: string;
+  car_number?: string;
+}
+
+export interface Participant {
+  id: number;
+  last_name: string;
+  first_name: string;
+  middle_name: string | null;
+  email: string;
+  event_id: number;
 }
 
 export interface RegisterResponse {
-  participantId: string;
-  qrToken: string;
-  qrImageDataUrl?: string;
-  participant: {
-    lastName: string;
-    firstName: string;
-    middleName?: string;
-    email: string;
-  };
+  message: string;
+  qr_token: string;
+  participant: Participant;
+  // Бэк не отдаёт event — кладём на клиенте при навигации на success.
   event: {
     title: string;
     location: string;
-    startAt: string;
+    start_at: string;
   };
 }
 
-export interface ApiError {
-  code:
-    | 'EVENT_NOT_FOUND'
-    | 'REGISTRATION_CLOSED'
-    | 'EVENT_FULL'
-    | 'EMAIL_ALREADY_REGISTERED'
-    | 'VALIDATION_ERROR'
-    | 'INTERNAL_ERROR';
+export interface ApiErrorBody {
+  error: string;
+}
+
+export type ApiErrorKind =
+  | 'event_not_found'
+  | 'registration_closed_or_full'
+  | 'email_already_registered'
+  | 'validation_error'
+  | 'internal_error';
+
+export interface NormalizedApiError {
+  kind: ApiErrorKind;
   message: string;
-  fields?: Record<string, string>;
 }

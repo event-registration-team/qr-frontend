@@ -1,15 +1,9 @@
-import type { PublicEvent, RegisterRequest, RegisterResponse } from '../types/api';
+import type { Participant, PublicEvent, RegisterRequest } from '../types/api';
 import { apiClient, normalizeApiError } from './client';
-import { mockGetPublicEvent, mockRegisterParticipant } from './mocks';
 
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
-
-export async function getPublicEvent(token: string): Promise<PublicEvent> {
-  if (USE_MOCKS) {
-    return mockGetPublicEvent(token);
-  }
+export async function getEvent(id: number): Promise<PublicEvent> {
   try {
-    const res = await apiClient.get<PublicEvent>(`/public/events/${token}`);
+    const res = await apiClient.get<PublicEvent>(`/events/${id}`);
     return res.data;
   } catch (error) {
     throw normalizeApiError(error);
@@ -17,19 +11,20 @@ export async function getPublicEvent(token: string): Promise<PublicEvent> {
 }
 
 export async function registerParticipant(
-  token: string,
   payload: RegisterRequest,
-): Promise<RegisterResponse> {
-  if (USE_MOCKS) {
-    return mockRegisterParticipant(token, payload);
-  }
+): Promise<{ qr_token: string; participant: Participant; message: string }> {
   try {
-    const res = await apiClient.post<RegisterResponse>(
-      `/public/events/${token}/register`,
-      payload,
-    );
+    const res = await apiClient.post<{
+      qr_token: string;
+      participant: Participant;
+      message: string;
+    }>('/participants/register', payload);
     return res.data;
   } catch (error) {
     throw normalizeApiError(error);
   }
+}
+
+export function getQrcodeUrl(participantId: number): string {
+  return `/api/participants/${participantId}/qrcode`;
 }

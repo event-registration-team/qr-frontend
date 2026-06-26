@@ -4,24 +4,24 @@ const nameRegex = /^[А-Яа-яЁёA-Za-z\-' ]+$/;
 const carNumberRegex = /^[АВЕКМНОРСТУХABEKMHOPCTYX]\d{3}[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\d{2,3}$/i;
 
 export function makeRegistrationSchema({
-  requirePhone,
-  requireCarNumber,
+  require_phone,
+  require_car_number,
 }: {
-  requirePhone: boolean;
-  requireCarNumber: boolean;
+  require_phone: boolean;
+  require_car_number: boolean;
 }) {
   return z.object({
-    lastName: z
+    last_name: z
       .string()
       .min(1, 'Введите фамилию')
       .max(50, 'Фамилия не должна превышать 50 символов')
       .regex(nameRegex, 'Фамилия содержит недопустимые символы'),
-    firstName: z
+    first_name: z
       .string()
       .min(1, 'Введите имя')
       .max(50, 'Имя не должно превышать 50 символов')
       .regex(nameRegex, 'Имя содержит недопустимые символы'),
-    middleName: z
+    middle_name: z
       .string()
       .refine((val) => !val || val.length <= 50, 'Отчество не должно превышать 50 символов')
       .refine(
@@ -36,14 +36,14 @@ export function makeRegistrationSchema({
         (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
         'Введите корректный email',
       ),
-    phone: requirePhone
+    phone: require_phone
       ? z.string().min(10, 'Введите номер телефона (минимум 10 символов)')
       : z.string().optional(),
-    carNumber: requireCarNumber
+    car_number: require_car_number
       ? z.string().regex(carNumberRegex, 'Введите номер в формате А123БВ77')
       : z.string().optional(),
   });
 }
 
-const _ref = makeRegistrationSchema({ requirePhone: false, requireCarNumber: false });
+const _ref = makeRegistrationSchema({ require_phone: false, require_car_number: false });
 export type RegistrationFormValues = z.infer<typeof _ref>;

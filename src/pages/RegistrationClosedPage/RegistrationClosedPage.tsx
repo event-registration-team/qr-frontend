@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { getPublicEvent } from '../../api/publicApi';
+import { getEvent } from '../../api/publicApi';
 import type { PublicEvent } from '../../types/api';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
@@ -34,7 +34,7 @@ export function RegistrationClosedPage() {
 
   useEffect(() => {
     if (!eventToken) return;
-    getPublicEvent(eventToken)
+    getEvent(Number(eventToken))
       .then(setEvent)
       .catch(() => {});
   }, [eventToken]);
@@ -51,7 +51,7 @@ export function RegistrationClosedPage() {
         {event && (
           <div className="closed-page__event-info">
             <p className="closed-page__event-title">{event.title}</p>
-            <p className="closed-page__event-detail">{formatDate(event.startAt)}</p>
+            <p className="closed-page__event-detail">{formatDate(event.start_at)}</p>
             <p className="closed-page__event-detail">{event.location}</p>
           </div>
         )}
