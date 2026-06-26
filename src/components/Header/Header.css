@@ -33,31 +33,3 @@
   color: var(--color-accent);
   font-weight: 700;
 }
-
-.header__tabs {
-  display: flex;
-  gap: 8px;
-
-  padding: 4px;
-
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.header__tab {
-  border: none;
-  border-radius: 8px;
-
-  padding: 8px 18px;
-
-  background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.header__tab--active {
-  background: var(--color-accent);
-  color: #ffffff;
-}
