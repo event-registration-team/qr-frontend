@@ -171,6 +171,11 @@
   color: #ef4444;
 }
 
+.events-table__actions button.events-table__actions-copy {
+  background: #eef6ff;
+  color: #2f628f;
+}
+
 .events-page__footer {
   display: flex;
   align-items: center;

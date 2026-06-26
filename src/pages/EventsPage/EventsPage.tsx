@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import { ROUTES } from '../../router/routes';
 import { eventService, type ApiEvent } from '../../services/eventService';
@@ -38,6 +39,16 @@ export function EventsPage() {
         setIsLoading(false);
       });
   }, []);
+
+  async function handleCopyLink(id: number) {
+    const link = `${window.location.origin}/register/${id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success('Ссылка скопирована');
+    } catch {
+      toast.error('Не удалось скопировать ссылку');
+    }
+  }
 
   async function handleDeleteEvent(id: number) {
     const isConfirmed = window.confirm('Удалить мероприятие?');
@@ -137,6 +148,14 @@ export function EventsPage() {
                         <Link to={`/events/${event.id}/edit`}>
                           ✎ Редактировать
                         </Link>
+
+                        <button
+                          type="button"
+                          className="events-table__actions-copy"
+                          onClick={() => handleCopyLink(event.id)}
+                        >
+                          📋 Скопировать ссылку
+                        </button>
 
                         <button
                           type="button"
