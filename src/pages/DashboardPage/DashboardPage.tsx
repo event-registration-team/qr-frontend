@@ -1,4 +1,6 @@
 import { StatsCard } from '../../components/StatsCard/StatsCard';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../router/routes';
 
 import './DashboardPage.css';
 
@@ -95,7 +97,7 @@ export function DashboardPage() {
       <article className="dashboard-card">
         <div className="dashboard-card__header">
           <h2>Ближайшие мероприятия</h2>
-          <a href="/events">Все мероприятия ↗</a>
+          <Link to={ROUTES.events}>Все мероприятия ↗</Link>
         </div>
 
         <div className="dashboard-events">

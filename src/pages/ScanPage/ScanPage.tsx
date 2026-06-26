@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import axios from 'axios';
+import { api } from '../../services/api';
 
 export function ScanPage() {
   const [result, setResult] = useState<any>(null);
@@ -19,8 +19,8 @@ export function ScanPage() {
     scanner.render(
       async (decodedText) => {
         try {
-          const res = await axios.get(
-            `http://77.222.55.38:8080/api/participants/scan?token=${decodedText}`
+          const res = await api.get(
+            `/participants/scan?token=${encodeURIComponent(decodedText)}`
           );
 
           setResult(res.data);
@@ -39,9 +39,7 @@ export function ScanPage() {
 
   async function handleCheckIn() {
     try {
-      await axios.post(
-        `http://77.222.55.38:8080/api/participants/${result.participant.id}/check-in`
-      );
+      await api.post(`/participants/${result.id}/check-in`);
 
       alert('Успешный вход!');
       setResult(null);
@@ -61,10 +59,10 @@ export function ScanPage() {
       {result && (
         <div style={{ marginTop: 20 }}>
           <h3>
-            {result.participant.last_name} {result.participant.first_name}
+            {result.last_name} {result.first_name}
           </h3>
 
-          <p>{result.participant.email}</p>
+          <p>{result.email}</p>
 
           <button onClick={handleCheckIn}>
             Подтвердить вход
