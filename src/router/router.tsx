@@ -5,9 +5,9 @@ import AdminLayout from '../layouts/AdminLayout/AdminLayout';
 import { DashboardPage } from '../pages/DashboardPage/DashboardPage';
 import { EventFormPage } from '../pages/EventFormPage/EventFormPage';
 import { EventsPage } from '../pages/EventsPage/EventsPage';
-import { ImportExportPage } from '../pages/ImportExportPage/ImportExportPage';
+import ImportExportPage from '../pages/ImportExportPage/ImportExportPage';
 import { LoginPage } from '../pages/LoginPage/LoginPage';
-import { ParticipantsPage } from '../pages/ParticipantsPage/ParticipantsPage';
+import ParticipantsPage from '../pages/ParticipantsPage/ParticipantsPage';
 import { StatisticsPage } from '../pages/StatisticsPage/StatisticsPage';
 import { RegisterPage } from '../pages/RegisterPage/RegisterPage';
 import { RegistrationClosedPage } from '../pages/RegistrationClosedPage/RegistrationClosedPage';
@@ -15,6 +15,7 @@ import { RegistrationSuccessPage } from '../pages/RegistrationSuccessPage/Regist
 import { PublicLayout } from '../components/PublicLayout/PublicLayout';
 
 import { ROUTES } from './routes';
+import { ScanPage } from '../pages/ScanPage/ScanPage';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,13 @@ export const router = createBrowserRouter([
     path: ROUTES.login,
     element: <LoginPage />,
   },
+
+  // 👇 ADD THIS OUTSIDE
+  {
+    path: '/scan',
+    element: <ScanPage />,
+  },
+
   {
     element: <PublicLayout />,
     children: [

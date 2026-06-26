@@ -1,41 +1,62 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ROUTES } from '../../router/routes';
+import { eventService, type ApiEvent } from '../../services/eventService';
 
 import './EventsPage.css';
 
-const events = [
-  {
-    id: 1,
-    title: 'TechConf 2024',
-    date: '15.12.2024, 10:00',
-    location: 'Москва, Центр «Экспо»',
-    status: 'Открыта',
-  },
-  {
-    id: 2,
-    title: 'Design Summit',
-    date: '20.12.2024, 09:00',
-    location: 'Санкт-Петербург, Лофт Проект',
-    status: 'Закрыта',
-  },
-  {
-    id: 3,
-    title: 'AI Forum 2024',
-    date: '25.12.2024, 11:00',
-    location: 'Казань, IT-парк',
-    status: 'Открыта',
-  },
-  {
-    id: 4,
-    title: 'DevOps Day',
-    date: '10.01.2025, 09:30',
-    location: 'Москва, Технополис',
-    status: 'Открыта',
-  },
-];
+function formatDate(value: string) {
+  return new Date(value).toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function getStatusText(status: ApiEvent['registration_status']) {
+  if (status === 'open') return 'Открыта';
+  if (status === 'closed') return 'Закрыта';
+  return 'Завершена';
+}
 
 export function EventsPage() {
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    eventService
+      .getEvents()
+      .then(setEvents)
+      .catch(() => {
+        setError('Не удалось загрузить мероприятия');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+  async function handleDeleteEvent(id: number) {
+    const isConfirmed = window.confirm('Удалить мероприятие?');
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      await eventService.deleteEvent(id);
+
+      setEvents((currentEvents) =>
+        currentEvents.filter((event) => event.id !== id),
+      );
+    } catch {
+      setError('Не удалось удалить мероприятие');
+    }
+  }
+
   return (
     <section className="events-page">
       <div className="events-page__header">
@@ -52,6 +73,7 @@ export function EventsPage() {
       <div className="events-page__card">
         <div className="events-page__toolbar">
           <input type="text" placeholder="Поиск мероприятий..." />
+
           <select defaultValue="all">
             <option value="all">Все статусы</option>
             <option value="open">Открыта</option>
@@ -60,62 +82,80 @@ export function EventsPage() {
           </select>
         </div>
 
-        <table className="events-table">
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>Дата проведения</th>
-              <th>Место</th>
-              <th>Регистрация</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
+        {isLoading && <p className="events-page__state">Загрузка мероприятий...</p>}
 
-          <tbody>
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td>
-                  <div className="events-table__title">
-                    <span>▣</span>
-                    {event.title}
-                  </div>
-                </td>
+        {error && (
+          <p className="events-page__state events-page__state--error">
+            {error}
+          </p>
+        )}
 
-                <td>{event.date}</td>
-                <td>{event.location}</td>
+        {!isLoading && !error && events.length === 0 && (
+          <p className="events-page__state">Мероприятий пока нет</p>
+        )}
 
-                <td>
-                  <span
-                    className={
-                      event.status === 'Открыта'
-                        ? 'events-table__status events-table__status--open'
-                        : 'events-table__status events-table__status--closed'
-                    }
-                  >
-                    • {event.status}
-                  </span>
-                </td>
+        {!isLoading && !error && events.length > 0 && (
+          <>
+            <table className="events-table">
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th>Дата проведения</th>
+                  <th>Место</th>
+                  <th>Регистрация</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
 
-                <td>
-                  <div className="events-table__actions">
-                    <Link to={`/events/${event.id}/edit`}>✎ Редактировать</Link>
-                    <button type="button">🗑 Удалить</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              <tbody>
+                {events.map((event) => (
+                  <tr key={event.id}>
+                    <td>
+                      <div className="events-table__title">
+                        <span>▣</span>
+                        {event.title}
+                      </div>
+                    </td>
 
-        <div className="events-page__footer">
-          <span>Показано 4 из 4 мероприятий</span>
+                    <td>{formatDate(event.start_at)}</td>
+                    <td>{event.location}</td>
 
-          <div className="events-page__pagination">
-            <button className="events-page__pagination-active">1</button>
-            <button>2</button>
-            <button>3</button>
-          </div>
-        </div>
+                    <td>
+                      <span
+                        className={
+                          event.registration_status === 'open'
+                            ? 'events-table__status events-table__status--open'
+                            : 'events-table__status events-table__status--closed'
+                        }
+                      >
+                        • {getStatusText(event.registration_status)}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="events-table__actions">
+                        <Link to={`/events/${event.id}/edit`}>
+                          ✎ Редактировать
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEvent(event.id)}
+                        >
+                          🗑 Удалить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="events-page__footer">
+              <span>Показано {events.length} мероприятий</span>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
