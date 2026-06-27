@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { dashboardService, type DashboardStats } from '../../services/dashboardService';
 import { StatsCard } from '../../components/StatsCard/StatsCard';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../router/routes';
 
 import './DashboardPage.css';
 

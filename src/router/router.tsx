@@ -17,70 +17,74 @@ import { PublicLayout } from '../components/PublicLayout/PublicLayout';
 import { ROUTES } from './routes';
 import { ScanPage } from '../pages/ScanPage/ScanPage';
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Navigate to={ROUTES.dashboard} replace />,
-  },
-  {
-    path: ROUTES.login,
-    element: <LoginPage />,
-  },
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 
-  // 👇 ADD THIS OUTSIDE
-  {
-    path: '/scan',
-    element: <ScanPage />,
-  },
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Navigate to={ROUTES.dashboard} replace />,
+    },
+    {
+      path: ROUTES.login,
+      element: <LoginPage />,
+    },
 
-  {
-    element: <PublicLayout />,
-    children: [
-      {
-        path: ROUTES.register,
-        element: <RegisterPage />,
-      },
-      {
-        path: ROUTES.registerClosed,
-        element: <RegistrationClosedPage />,
-      },
-      {
-        path: ROUTES.registerSuccess,
-        element: <RegistrationSuccessPage />,
-      },
-    ],
-  },
-  {
-    element: <AdminLayout />,
-    children: [
-      {
-        path: ROUTES.dashboard,
-        element: <DashboardPage />,
-      },
-      {
-        path: ROUTES.events,
-        element: <EventsPage />,
-      },
-      {
-        path: ROUTES.createEvent,
-        element: <EventFormPage mode="create" />,
-      },
-      {
-        path: ROUTES.editEvent,
-        element: <EventFormPage mode="edit" />,
-      },
-      {
-        path: ROUTES.participants,
-        element: <ParticipantsPage />,
-      },
-      {
-        path: ROUTES.statistics,
-        element: <StatisticsPage />,
-      },
-      {
-        path: ROUTES.importExport,
-        element: <ImportExportPage />,
-      },
-    ],
-  },
-]);
+    {
+      path: '/scan',
+      element: <ScanPage />,
+    },
+
+    {
+      element: <PublicLayout />,
+      children: [
+        {
+          path: ROUTES.register,
+          element: <RegisterPage />,
+        },
+        {
+          path: ROUTES.registerClosed,
+          element: <RegistrationClosedPage />,
+        },
+        {
+          path: ROUTES.registerSuccess,
+          element: <RegistrationSuccessPage />,
+        },
+      ],
+    },
+    {
+      element: <AdminLayout />,
+      children: [
+        {
+          path: ROUTES.dashboard,
+          element: <DashboardPage />,
+        },
+        {
+          path: ROUTES.events,
+          element: <EventsPage />,
+        },
+        {
+          path: ROUTES.createEvent,
+          element: <EventFormPage mode="create" />,
+        },
+        {
+          path: ROUTES.editEvent,
+          element: <EventFormPage mode="edit" />,
+        },
+        {
+          path: ROUTES.participants,
+          element: <ParticipantsPage />,
+        },
+        {
+          path: ROUTES.statistics,
+          element: <StatisticsPage />,
+        },
+        {
+          path: ROUTES.importExport,
+          element: <ImportExportPage />,
+        },
+      ],
+    },
+  ],
+  { basename },
+);
