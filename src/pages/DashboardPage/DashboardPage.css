@@ -180,3 +180,13 @@
 .dashboard-page__state--error {
   color: #ef4444;
 }
+
+.dashboard-page__event-select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border, #dfe7ef);
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 13px;
+  color: var(--color-text, #1f2937);
+}
