@@ -170,3 +170,13 @@
   font-size: 12px;
   font-weight: 700;
 }
+
+.dashboard-page__state {
+  padding: 24px 8px;
+  color: #7b8794;
+  font-weight: 600;
+}
+
+.dashboard-page__state--error {
+  color: #ef4444;
+}
