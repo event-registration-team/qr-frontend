@@ -14,6 +14,7 @@ type Participant = {
   phone?: string | null;
   car_number?: string | null;
   visit_status?: 'registered' | 'visited';
+  email_sent?: boolean;
   registered_at?: string | null;
 };
 
@@ -65,6 +66,8 @@ export default function ParticipantsPage() {
     phone: '',
     car_number: '',
   });
+
+  const [resendingId, setResendingId] = useState<number | null>(null);
 
   useEffect(() => {
     setError('');
@@ -172,6 +175,22 @@ export default function ParticipantsPage() {
     }
   }
 
+  async function handleResendEmail(id: number) {
+    setResendingId(id);
+    setError('');
+
+    try {
+      await participantService.resendEmail(id);
+      setParticipants((current) =>
+        current.map((p) => (p.id === id ? { ...p, email_sent: true } : p)),
+      );
+    } catch {
+      setError('Не удалось отправить письмо участнику');
+    } finally {
+      setResendingId(null);
+    }
+  }
+
   return (
     <section className="participants-page">
       <div className="participants-page__header">
@@ -249,6 +268,7 @@ export default function ParticipantsPage() {
                     <th>Авто</th>
                     <th>Дата регистрации</th>
                     <th>Статус</th>
+                    <th>Письмо</th>
                   </tr>
                 </thead>
 
@@ -274,6 +294,20 @@ export default function ParticipantsPage() {
                             ? 'Посетил'
                             : 'Зарегистрирован'}
                         </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="participants-page__primary"
+                          disabled={resendingId === participant.id}
+                          onClick={() => handleResendEmail(participant.id)}
+                        >
+                          {resendingId === participant.id
+                            ? 'Отправка...'
+                            : participant.email_sent
+                              ? 'Отправить снова'
+                              : 'Отправить'}
+                        </button>
                       </td>
                     </tr>
                   ))}

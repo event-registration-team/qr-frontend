@@ -9,6 +9,7 @@ export type ApiParticipant = {
   phone?: string | null;
   car_number?: string | null;
   visit_status: 'visited' | 'registered';
+  email_sent?: boolean;
   registered_at?: string | null;
   checked_in_at?: string | null;
 };
@@ -52,6 +53,10 @@ export const participantService = {
 
   async deleteParticipant(id: number): Promise<void> {
     await api.delete(`/participants/${id}`);
+  },
+
+  async resendEmail(id: number): Promise<void> {
+    await api.post(`/participants/${id}/resend-email`);
   },
 
   async updateParticipant(
