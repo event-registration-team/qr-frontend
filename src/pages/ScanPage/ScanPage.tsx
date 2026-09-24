@@ -74,10 +74,10 @@ export function ScanPage() {
         },
         () => {}
       );
-          } catch (e: any) {
-      setIsScanning(false);
-      setError('Ошибка камеры: ' + (e?.name || '?') + ' — ' + (e?.message || String(e)));
-    } finally {
+      } catch {
+  setIsScanning(false);
+  setError('Не удалось запустить камеру. Разрешите доступ к камере и попробуйте снова.');
+} finally {
       setIsStarting(false);
     }
   }
