@@ -74,11 +74,9 @@ export function ScanPage() {
         },
         () => {}
       );
-    } catch {
+          } catch (e: any) {
       setIsScanning(false);
-      setError(
-        'Не удалось запустить камеру. Проверьте разрешение на доступ к камере и попробуйте снова.'
-      );
+      setError('Ошибка камеры: ' + (e?.name || '?') + ' — ' + (e?.message || String(e)));
     } finally {
       setIsStarting(false);
     }
