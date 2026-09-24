@@ -191,6 +191,22 @@ export default function ParticipantsPage() {
     }
   }
 
+  async function handleDeleteParticipant(participant: Participant) {
+    const isConfirmed = window.confirm(
+      `Удалить участника ${getFullName(participant)}?`,
+    );
+    if (!isConfirmed) return;
+
+    try {
+      await participantService.deleteParticipant(participant.id);
+      setParticipants((current) =>
+        current.filter((item) => item.id !== participant.id),
+      );
+    } catch {
+      setError('Не удалось удалить участника');
+    }
+  }
+
   return (
     <section className="participants-page">
       <div className="participants-page__header">
@@ -269,6 +285,7 @@ export default function ParticipantsPage() {
                     <th>Дата регистрации</th>
                     <th>Статус</th>
                     <th>Письмо</th>
+                    <th>Действия</th>
                   </tr>
                 </thead>
 
@@ -308,6 +325,18 @@ export default function ParticipantsPage() {
                               ? 'Отправить снова'
                               : 'Отправить'}
                         </button>
+                      </td>
+                      <td>
+                        <div className="participants-table__actions">
+                          <button
+                            type="button"
+                            className="participants-table__delete"
+                            title="Удалить участника"
+                            onClick={() => handleDeleteParticipant(participant)}
+                          >
+                            🗑
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
